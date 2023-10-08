@@ -1,0 +1,22 @@
+{% for server in virtual_servers %}
+server {
+    listen {{ server.port }};
+    server_name {{ server.hostname }};
+
+    {% for location in server.locations.values() %}
+        location {{ location.name }} {
+            proxy_pass http://{{ location.container.address }}:{{ location.container.port }}/;
+        }
+    {% endfor %}
+}
+{% endfor %}
+
+
+server {
+    listen 80 default_server;
+    server_name _ ;
+
+    location / {
+    return 503;
+    }
+}

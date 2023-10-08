@@ -1,16 +1,24 @@
-# This is a sample Python script.
+import signal
+import sys
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+from nginx_proxy.webserver import WebServer
 
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+server = None
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+# handle exit signal to respond to stop command.
+def receive_signal(signal_number, frame):
+    global server
+    if signal_number == 15:
+        print("\nShutdown Requested")
+        if server is not None:
+            server = None
+        sys.exit(0)
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+
+signal.signal(signal.SIGTERM, receive_signal)
+
+try:
+    server = WebServer()
+except (KeyboardInterrupt, SystemExit):
+    print("-------------------------------\nPerforming Graceful ShutDown !!")
