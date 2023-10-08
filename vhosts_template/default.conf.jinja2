@@ -3,11 +3,15 @@ server {
     listen {{ server.port }};
     server_name {{ server.hostname }};
 
-    {% for location in server.locations.values() %}
-        location {{ location.name }} {
-            proxy_pass http://{{ location.container.address }}:{{ location.container.port }}/;
-        }
-    {% endfor %}
+    {#    {% for location in server.locations.values() %}#}
+    {#        location {{ location.name }} {#}
+    {#            proxy_pass http://{{ location.container.address }}:{{ location.container.port }}/;#}
+    {#        }#}
+    {#    {% endfor %}#}
+
+    location / {
+        proxy_pass http://172.18.0.2:3000/;
+    }
 }
 {% endfor %}
 
@@ -17,6 +21,6 @@ server {
     server_name _ ;
 
     location / {
-    return 503;
+        return 503;
     }
 }
