@@ -58,7 +58,7 @@ class WebServer:
                 exit(1)
 
         self.nginx.wait()
-
+        self.rescan_all_container()
         self.reload()
 
     def learn_yourself(self):
@@ -104,9 +104,17 @@ class WebServer:
         This is called whenever there's change in container or network state.
         """
         hosts: List[Host] = []
-        print("config data: ", self.config_data.config_map)
         for host_data in self.config_data.host_list():
             host = copy.deepcopy(host_data)
+
+            for i, location in enumerate(host.locations.values()):
+                location.container = list(location.containers)[0]
+
+                if len(location.containers) > 1:
+                    print("WARNING: Multiple containers for a single location", file=sys.stderr)
+                    # todo: this means that there are multiple containers for a single location
+                    # definitely should be using some load balancing here
+
             hosts.append(host)
 
         print("reload.hosts: ", hosts)
@@ -133,3 +141,13 @@ class WebServer:
 
     def remove_container(self):
         pass
+
+    def rescan_all_container(self):
+        """
+        Rescan all the containers to detect changes, update nginx config if necessary.
+        This is called in one of the following conditions:
+        -- in the beginning of execution of the program
+        """
+        containers = self.client.containers.list()
+        for container in containers:
+            self._register_container(container)
