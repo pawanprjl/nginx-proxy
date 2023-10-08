@@ -10,7 +10,7 @@ def process_virtual_hosts(container: DockerContainer, known_networks: set) -> Pr
     try:
         for host, location, proxied_container in host_generator(container, known_networks=known_networks):
             if type(host) is not str:
-                host.add_container(proxied_container)
+                host.add_container(location, proxied_container)
                 hosts.add_host(host)
     except NoHostConfiguration:
         print("No VIRTUAL_HOST       ", "Id:" + container.id[:12],

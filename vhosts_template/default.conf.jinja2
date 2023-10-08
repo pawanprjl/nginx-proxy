@@ -9,9 +9,11 @@ server {
     {#        }#}
     {#    {% endfor %}#}
 
+    {% for location in server.locations.values() %}
     location / {
         proxy_pass http://172.18.0.2:3000/;
     }
+    {% endfor %}
 }
 {% endfor %}
 
