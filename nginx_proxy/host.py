@@ -22,6 +22,20 @@ class Host:
         self.locations[location].add(container)
         self.container_set.add(container.id)
 
+    def remove_container(self, container_id) -> bool:
+        removed = False
+        deletions = []
+        if container_id in self.container_set:
+            for path, location in self.locations.items():
+                removed = location.remove(container_id) or removed
+                if location.is_empty():
+                    deletions.append(path)
+            for path in deletions:
+                del self.locations[path]
+            if removed:
+                self.container_set.remove(container_id)
+        return removed
+
     def is_empty(self) -> bool:
         return len(self.container_set) == 0
 

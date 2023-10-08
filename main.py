@@ -50,6 +50,7 @@ def process_container_event(action, event):
         server.update_container(event["id"])
     elif action == "die":
         print("container died", event["id"])
+        server.remove_container(event["id"])
 
 
 try:

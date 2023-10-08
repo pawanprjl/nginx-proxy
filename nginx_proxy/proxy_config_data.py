@@ -1,4 +1,4 @@
-from typing import Set, Dict, Generator
+from typing import Set, Dict, Generator, Tuple
 
 from nginx_proxy.host import Host
 
@@ -24,6 +24,23 @@ class ProxyConfigData:
         else:
             self._len = self._len + 1
             self.config_map[host.hostname] = {host.port: host}
+
+        for location in host.locations.values():
+            for container in location.containers:
+                self.containers.add(container.id)
+
+    def remove_container(self, container_id: str) -> Tuple[bool, Set[Tuple[str, int]]]:
+        removed_domains = set()
+        result = False
+        if container_id in self.containers:
+            self.containers.remove(container_id)
+            for host in self.host_list():
+                if host.remove_container(container_id):
+                    result = True
+                    if host.is_empty():
+                        removed_domains.add((host.hostname, host.port))
+
+        return result, removed_domains
 
     def has_container(self, container_id):
         return container_id in self.containers

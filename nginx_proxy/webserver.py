@@ -139,8 +139,15 @@ class WebServer:
             pass
         return False
 
-    def remove_container(self):
-        pass
+    def remove_container(self, container_id: str):
+        """
+        Removes container from the maintained list.
+        This is called when a container dies or leaves a known network.
+        """
+        deleted, deleted_domain = self.config_data.remove_container(container_id)
+        print("remove_container. deleted: ", deleted, " deleted_domain: ", deleted_domain)
+        if deleted:
+            self.reload()
 
     def rescan_all_container(self):
         """

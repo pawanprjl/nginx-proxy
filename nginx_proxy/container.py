@@ -14,6 +14,16 @@ class Container:
     def __repr__(self):
         return str({"address": self.address, "port": self.port, "path": self.path})
 
+    def __hash__(self):
+        return hash(self.id)
+
+    def __eq__(self, other) -> bool:
+        if type(other) is Container:
+            return self.id == other.id
+        if type(other) is str:
+            return self.id == other
+        return False
+
     @staticmethod
     def get_env_map(container: DockerContainer):
         # first we get the list of tuples each containing data in form (key, value)
