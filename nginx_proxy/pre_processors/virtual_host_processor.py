@@ -36,8 +36,8 @@ def host_generator(container: DockerContainer, known_networks: set = {}):
                 ip_address = detail["IPAddress"]
                 if ip_address:
                     break
-                else:
-                    raise UnreachableNetwork()
+            else:
+                raise UnreachableNetwork()
 
     for host_config in virtual_hosts:
         host, location, container_data = _parse_host_entry(host_config)

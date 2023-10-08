@@ -3,7 +3,6 @@ import sys
 import traceback
 
 import docker
-
 from nginx_proxy.webserver import WebServer
 
 server = None
@@ -35,7 +34,9 @@ def event_loop():
     for event in client.events(decode=True):
         try:
             event_type = event['Type']
-            if event_type == "container":
+            if event_type == "network":
+                process_network_event(event['Action'], event)
+            elif event_type == "container":
                 process_container_event(event['Action'], event)
         except (KeyboardInterrupt, SystemExit) as err:
             raise err
@@ -46,11 +47,21 @@ def event_loop():
 
 def process_container_event(action, event):
     if action == "start":
-        print("container started", event["id"])
         server.update_container(event["id"])
     elif action == "die":
-        print("container died", event["id"])
         server.remove_container(event["id"])
+
+
+def process_network_event(action, event):
+    if action == "create":
+        pass
+    elif "container" in event["Actor"]["Attributes"]:
+        if action == "disconnect":
+            server.disconnect(network=event["Actor"]["ID"], container=event["Actor"]["Attributes"]["container"])
+        elif action == "connect":
+            server.connect(network=event["Actor"]["ID"], container=event["Actor"]["Attributes"]["container"])
+    elif action == "destroy":
+        pass
 
 
 try:

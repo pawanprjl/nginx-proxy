@@ -20,7 +20,18 @@ class ProxyConfigData:
 
     def add_host(self, host: Host) -> None:
         if host.hostname in self.config_map:
-            pass
+            port_map = self.config_map[host.hostname]
+            if host.port in port_map:
+                existing_host: Host = port_map[host.port]
+                for location in host.locations.values():
+                    for container in location.containers:
+                        existing_host.add_container(location.name, container)
+                        self.containers.add(container.id)
+                return
+            else:
+                self._len = self._len + 1
+                port_map[host.port] = host
+
         else:
             self._len = self._len + 1
             self.config_map[host.hostname] = {host.port: host}

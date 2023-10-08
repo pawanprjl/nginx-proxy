@@ -122,11 +122,31 @@ class WebServer:
         response = self.nginx.update_config(output)
         return response
 
+    def connect(self, network, container):
+        if self.id is not None and container == self.id:
+            if network not in self.networks:
+                self.networks[network] = self.client.networks.get(network).name
+                self.rescan_and_reload()
+        elif network in self.networks:
+            self.update_container(container)
+
+    def disconnect(self, network, container):
+        if self.id is not None and container == self.id:
+            if network in self.networks:
+                del self.networks[network]
+                self.rescan_and_reload()
+        elif container in self.config_data.containers and network in self.networks:
+            if not self.update_container(container):
+                self.remove_container(container)
+                self.reload()
+
     def update_container(self, container_id) -> bool:
         """
         Rescan the container to detect changes. And update nginx configuration if necessary.
         This is usually called in one of the following conditions:
         -- new container is started
+        -- an existing container has left a network in which nginx-proxy is connected.
+        -- during full container rescan
         :param container_id: container id to update
         :return: true if container state change affected the nginx configuration else false
         """
@@ -156,5 +176,11 @@ class WebServer:
         -- in the beginning of execution of the program
         """
         containers = self.client.containers.list()
+        self.config_data.containers = set()
+        self.config_data.config_map = {}
         for container in containers:
             self._register_container(container)
+
+    def rescan_and_reload(self):
+        self.rescan_all_container()
+        self.reload()
