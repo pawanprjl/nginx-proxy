@@ -10,13 +10,18 @@ class Host:
     It contains the locations and information about which containers serve the location.
     """
 
-    def __init__(self, hostname: str, port: int):
+    def __init__(self, hostname: str, port: int, scheme=None):
+        if scheme is None:
+            scheme = {'http', }
+
         self.hostname: str = hostname
         self.port: int = port
-        self.container_set: Set[str] = set()
+        self.scheme: set = scheme
         self.locations: Dict[str, Location] = {}  # the map of locations.and the container that serve the locations
+        self.container_set: Set[str] = set()
+        self.secured: bool = 'https' in scheme or 'wss' in scheme
 
-    def add_container(self, location: str, container: Container) -> None:
+    def add_container(self, location: str, container: Container, http=True) -> None:
         if location not in self.locations:
             self.locations[location] = Location(location)
         self.locations[location].add(container)
@@ -40,7 +45,12 @@ class Host:
         return len(self.container_set) == 0
 
     def __repr__(self):
-        return str({"server_name": self.hostname, "port": self.port, "locations": self.locations})
+        return str({
+            "scheme": self.scheme,
+            "server_name": self.hostname,
+            "port": self.port,
+            "locations": self.locations
+        })
 
     def __str__(self):
         return self.__repr__()

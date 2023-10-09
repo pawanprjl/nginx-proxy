@@ -9,7 +9,7 @@ from docker.models.containers import Container as DockerContainer
 from jinja2 import Template
 
 from nginx.nginx import Nginx
-from nginx_proxy import ProxyConfigData, pre_processors, Host
+from nginx_proxy import ProxyConfigData, pre_processors, Host, post_processors
 
 
 def strip_end(string: str, char="/"):
@@ -37,6 +37,7 @@ class WebServer:
         self.template = Template(file.read())
         file.close()
         self.learn_yourself()
+        self.ssl_processor = post_processors.SslCertificateProcessor()
 
         if self.nginx.config_test():
             if len(self.nginx.last_working_config) < 50:
@@ -116,6 +117,8 @@ class WebServer:
                     # definitely should be using some load balancing here
 
             hosts.append(host)
+
+        self.ssl_processor.process_ssl_certificates(hosts)
 
         print("reload.hosts: ", hosts)
         output = self.template.render(virtual_servers=hosts, config=self.config)

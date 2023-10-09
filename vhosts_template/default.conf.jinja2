@@ -1,15 +1,46 @@
 {% for server in virtual_servers %}
-server {
-    listen {{ server.port }};
-    server_name {{ server.hostname }};
+    {% if server.secured %}
 
-    {% for location in server.locations.values() %}
-        location {{ location.name }} {
+    server {
+        listen {{ server.port }};
+        server_name {{ server.hostname }};
+
+        {% for location in server.locations.values() %}
+            location {{ location.name }} {
             proxy_pass http://{{ location.container.address }}:{{ location.container.port }}/;
-        }
-    {% endfor %}
+            }
+        {% endfor %}
 
-}
+    }
+
+    {% else %}
+
+    server {
+        listen {{ server.port }};
+        server_name {{ server.hostname }};
+
+        {% for location in server.locations.values() %}
+            location {{ location.name }} {
+                proxy_pass http://{{ location.container.address }}:{{ location.container.port }}/;
+            }
+        {% endfor %}
+
+    }
+
+    {% endif %}
+
+    {% if server.ssl_redirect %}
+
+        server {
+            listen 80;
+            server_name {{ server.hostname }};
+
+            location / {
+                return 301 https://$host$request_uri;
+            }
+        }
+
+    {% endif %}
 {% endfor %}
 
 
