@@ -61,8 +61,10 @@ class WebServer:
                 exit(1)
 
         self.nginx.wait()
+
         self.rescan_all_container()
         self.reload()
+        self.ssl_processor.certificate_expiry_thread.start()
 
     def learn_yourself(self):
         """
