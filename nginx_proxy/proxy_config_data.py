@@ -60,3 +60,19 @@ class ProxyConfigData:
         for host_map in self.config_map.values():
             for host in host_map.values():
                 yield host
+
+    def print(self):
+        for host in self.host_list():
+            postfix = "://" + host.hostname
+
+            def host_url():
+                if host.secured:
+                    return "-   " + "https" + postfix + (":" + str(host.port) if host.port != 443 else "")
+                else:
+                    return "-   " + "http" + postfix + (":" + str(host.port) if host.port != 80 else "")
+
+            for location in host.locations.values():
+                print(host_url() + location.name)
+                for container in location.containers:
+                    print("         -> ", (container.scheme + "://" + container.address + ":" + str(
+                        container.port) if container.port else '') + container.path)
