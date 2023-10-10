@@ -1,10 +1,18 @@
 import difflib
+import os
+import pathlib
+import random
 import socket
+import string
 import subprocess
 import sys
 import time
 from os import path
 from typing import Union, Tuple
+
+import requests
+
+from nginx import Url
 
 
 class Nginx:
@@ -12,15 +20,20 @@ class Nginx:
     command_start = ["nginx"]
     command_reload = ["nginx", "-s", "reload"]
 
-    def __init__(self, config_file_path):
+    def __init__(self, config_file_path, challenge_dir="/tmp/acme-challenges/"):
         self.config_file_path = config_file_path
+        self.challenge_dir = challenge_dir
+
         if path.exists(config_file_path):
             with open(config_file_path) as file:
                 self.last_working_config = file.read()
         else:
             self.last_working_config = ""
+
         self.config_stack = [self.last_working_config]
         self.last_error = None
+        if not os.path.exists(challenge_dir):
+            pathlib.Path(self.challenge_dir).mkdir(parents=True)
 
     def start(self) -> bool:
         """
@@ -114,6 +127,48 @@ class Nginx:
             return result, None
         else:
             return result
+
+    def verify_domain(self, _domain: list or str):
+        """Verify that a domain is owned by the current machine.
+        :param _domain: A list of domains to verify.
+        :returns: True if the domain is owned by the current machine, False otherwise.
+        """
+        domains = [_domain] if type(_domain) is str else _domain
+
+        # Filter out any invalid domains
+        domains = [x for x in domains if Url.is_valid_hostname(x)]
+
+        # generate a random challenge token
+        unique_challenge_name = "".join(random.choices(string.ascii_letters + string.digits, k=32))
+        challenge_token = "".join(random.choices(string.ascii_letters + string.digits, k=256))
+
+        # write the challenge token to a file on the current machine.
+        challenge_file = os.path.join(self.challenge_dir, unique_challenge_name)
+        with open(challenge_file, mode="wt") as file_descriptor:
+            file_descriptor.write(challenge_token)
+
+        # try to access the challenge token from each domain
+        success = []
+
+        for domain in domains:
+            try:
+                url = f"http://{domain}/.well-known/acme-challenge/{unique_challenge_name}"
+                response = requests.get(url, allow_redirects=False, timeout=3)
+                if response.status_code == 200 and response.content.decode("utf-8") == challenge_token:
+                    success.append(domain)
+                    continue
+                print(f"[ERROR] [{domain}] Not owned by this machine: Status Code[{response.status_code}] -> {url}",
+                      file=sys.stderr)
+                continue
+            except requests.exceptions.RequestException as err:
+                print(f"[ERROR] Domain is not owned by this machine: {err}", file=sys.stderr)
+                continue
+
+        # remove the challenge file from the current machine
+        os.remove(challenge_file)
+
+        # return the result
+        return len(success) > 0 if type(_domain) is str else success
 
     def wait(self):
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

@@ -1,21 +1,68 @@
 {% for server in virtual_servers %}
-server {
-    listen {{ server.port }};
-    server_name {{ server.hostname }};
+    {% if server.secured %}
 
-    {% for location in server.locations.values() %}
-        location {{ location.name }} {
+    server {
+        listen {{ server.port }} ssl http2;
+        server_name {{ server.hostname }};
+        ssl_certificate /etc/ssl/certs/{{ server.ssl_file }}.crt;
+        ssl_certificate_key /etc/ssl/private/{{ server.ssl_file }}.key;
+
+        {% for location in server.locations.values() %}
+            location {{ location.name }} {
             proxy_pass http://{{ location.container.address }}:{{ location.container.port }}/;
-        }
-    {% endfor %}
+            }
+        {% endfor %}
 
-}
+    }
+
+    {% else %}
+
+    server {
+        listen {{ server.port }};
+        server_name {{ server.hostname }};
+
+        {% for location in server.locations.values() %}
+            location {{ location.name }} {
+                proxy_pass http://{{ location.container.address }}:{{ location.container.port }}/;
+            }
+        {% endfor %}
+
+        location /.well-known/acme-challenge/ {
+            alias {{ config.challenge_dir }};
+            try_files $uri =404;
+        }
+    }
+
+    {% endif %}
+
+    {% if server.ssl_redirect %}
+
+        server {
+            listen 80;
+            server_name {{ server.hostname }};
+
+            location /.well-known/acme-challenge/ {
+                alias {{ config.challenge_dir }};
+                try_files $uri =404;
+            }
+
+            location / {
+                return 301 https://$host$request_uri;
+            }
+        }
+
+    {% endif %}
 {% endfor %}
 
 
 server {
     listen 80 default_server;
     server_name _ ;
+
+    location /.well-known/acme-challenge/ {
+        alias {{ config.challenge_dir }};
+        try_files $uri =404;
+    }
 
     location / {
         return 503;

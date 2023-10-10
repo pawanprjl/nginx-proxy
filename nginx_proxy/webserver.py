@@ -9,7 +9,7 @@ from docker.models.containers import Container as DockerContainer
 from jinja2 import Template
 
 from nginx.nginx import Nginx
-from nginx_proxy import ProxyConfigData, pre_processors, Host
+from nginx_proxy import ProxyConfigData, pre_processors, Host, post_processors
 
 
 def strip_end(string: str, char="/"):
@@ -19,6 +19,8 @@ def strip_end(string: str, char="/"):
 def loadconfig():
     return {
         'config_dir': strip_end(os.getenv('NGINX_CONFIG_DIR', '/etc/nginx/')),
+        'ssl_dir': strip_end(os.getenv('SSL_DIR', '/etc/ssl/')),
+        'challenge_dir': os.getenv('CHALLENGE_DIR', '/tmp/acme-challenges/'),
     }
 
 
@@ -37,6 +39,7 @@ class WebServer:
         self.template = Template(file.read())
         file.close()
         self.learn_yourself()
+        self.ssl_processor = post_processors.SslCertificateProcessor(self.nginx, self, ssl_dir=self.config['ssl_dir'])
 
         if self.nginx.config_test():
             if len(self.nginx.last_working_config) < 50:
@@ -94,6 +97,7 @@ class WebServer:
         known_networks = set(self.networks.keys())
         hosts = pre_processors.process_virtual_hosts(container, known_networks)
         if len(hosts):
+            hosts.print()
             for h in hosts.host_list():
                 self.config_data.add_host(h)
         return len(hosts) > 0
@@ -117,7 +121,8 @@ class WebServer:
 
             hosts.append(host)
 
-        print("reload.hosts: ", hosts)
+        self.ssl_processor.process_ssl_certificates(hosts)
+
         output = self.template.render(virtual_servers=hosts, config=self.config)
         response = self.nginx.update_config(output)
         return response

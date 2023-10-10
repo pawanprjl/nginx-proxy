@@ -50,6 +50,7 @@ def host_generator(container: DockerContainer, known_networks: set = {}):
             else:
                 container_data.port = 80
 
+        host.secured = 'https' in host.scheme or host.port == 443
         yield host, location, container_data
 
 
@@ -61,6 +62,7 @@ def _parse_host_entry(entry_string: str) -> (Host, str):
 
     # create container config from internal host mapping.
     container = Container(
+        scheme=list(internal['scheme'])[0] if len(internal['scheme']) else 'http',
         address=internal["host"] if internal["host"] else None,
         port=internal["port"] if internal["port"] else None,
         path=internal["location"] if internal["location"] else "/",
@@ -71,6 +73,7 @@ def _parse_host_entry(entry_string: str) -> (Host, str):
         hostname=external["host"] if external["host"] else None,
         # having https port on 80 will be detected later and used for redirection.
         port=int(external["port"]) if external["port"] else 80,
+        scheme=external["scheme"] if external["scheme"] else {"http"}
     )
 
     location = external["location"] if external["location"] else "/"
