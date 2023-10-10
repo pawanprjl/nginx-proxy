@@ -14,15 +14,15 @@ WORKDIR /app
 # copy project
 COPY . .
 
-# install requirements
-RUN pip install --no-cache-dir -r requirements.txt
 
 # install required packages
-RUN apk --no-cache add openssl
+RUN apk --no-cache add openssl \
+    && apk add --no-cache --virtual .build-deps \
+    gcc libc-dev openssl-dev linux-headers libffi-dev \
+    && pip install --no-cache-dir -r requirements.txt \
+    && rm -f requirements.txt && apk del .build-deps
 
 # symlink docker-entrypoint.sh at root path
 RUN ln -s /app/docker-entrypoint.sh /docker-entrypoint.sh
-
-EXPOSE 80
 
 CMD ["sh", "-e", "/docker-entrypoint.sh"]

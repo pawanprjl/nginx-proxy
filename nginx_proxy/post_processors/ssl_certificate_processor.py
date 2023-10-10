@@ -50,7 +50,6 @@ class SslCertificateProcessor:
                         ssl_requests.add(host)
 
         if len(ssl_requests):
-            print("process_ssl_certificates.ssl_requests: ", ssl_requests)
             registered = self.ssl.register_certificate_or_self_sign([h.hostname for h in ssl_requests],
                                                                     ignore_existing=True)
 

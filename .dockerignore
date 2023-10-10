@@ -1,7 +1,7 @@
-.idea
-.git
-venv
-.vscode
+.idea/
+.git/
+venv/
+.vscode/
 
 **__pycache__**
 
