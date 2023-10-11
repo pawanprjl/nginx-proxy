@@ -11,14 +11,32 @@ from acme_nginx.AcmeV2 import AcmeV2
 from nginx.nginx import Nginx
 
 
+def get_api_url():
+    api_url = os.environ.get("LETSENCRYPT_API")
+    if api_url is not None:
+        if api_url.startswith("https://"):
+            return api_url
+        else:
+            return "https://acme-staging-v02.api.letsencrypt.org/directory"
+    else:
+        return "https://acme-v02.api.letsencrypt.org/directory"
+
+
 # used acme_nginx to manage ssl certificates from https://github.com/kshcherban/acme-nginx
 class SSL:
 
     def __init__(self, ssl_path, nginx: Nginx):
         self.ssl_path = ssl_path
         self.nginx = nginx
-        self.api_url = "https://acme-v02.api.letsencrypt.org/directory"
+        self.api_url = get_api_url()
         print("Using letsencrypt url: ", self.api_url)
+
+        try:
+            os.mkdir(os.path.join(ssl_path, "accounts"))
+            os.mkdir(os.path.join(ssl_path, "private"))
+            os.mkdir(os.path.join(ssl_path, "certs"))
+        except FileExistsError as e:
+            pass
 
     def cert_file(self, domain):
         return os.path.join(self.ssl_path, "certs", domain + ".crt")

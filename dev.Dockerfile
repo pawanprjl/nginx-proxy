@@ -23,7 +23,7 @@ RUN apk --no-cache add openssl \
 # symlink docker-entrypoint.sh at root path
 RUN ln -s /app/docker-entrypoint.sh /docker-entrypoint.sh
 
-ARG LETSENCRYPT_API="https://acme-v02.api.letsencrypt.org/directory"
+ARG LETSENCRYPT_API="https://acme-staging-v02.api.letsencrypt.org/directory"
 
 ENV LETSENCRYPT_API=${LETSENCRYPT_API}
 
