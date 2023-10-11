@@ -191,3 +191,6 @@ class WebServer:
     def rescan_and_reload(self):
         self.rescan_all_container()
         self.reload()
+
+    def cleanup(self):
+        self.ssl_processor.shutdown()

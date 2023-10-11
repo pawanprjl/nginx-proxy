@@ -14,6 +14,7 @@ def receive_signal(signal_number, frame):
     if signal_number == 15:
         print("\nShutdown Requested")
         if server is not None:
+            server.cleanup()
             server = None
         sys.exit(0)
 

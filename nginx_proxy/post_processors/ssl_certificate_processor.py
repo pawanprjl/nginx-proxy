@@ -41,7 +41,7 @@ class SslCertificateProcessor:
                             host.ssl_file = wildcard
                             continue
 
-                    # check if the certificate is expired or not
+                    # find the ssl certificate if it exists
                     time = self.ssl.expiry_time(host.hostname)
                     if (time - datetime.now()).days > 2:
                         self.cache[host.hostname] = time
@@ -71,8 +71,8 @@ class SslCertificateProcessor:
         self.lock.release()
 
     def update_ssl_certificates(self):
-        self.lock.acquire()
         while not self.shutdown_requested:
+            self.lock.acquire()
             if self.next_ssl_expiry is None:
                 print("[SSL Refresh Thread] No certificates to refresh, waiting for new certificates to be added")
                 self.lock.wait()
@@ -87,7 +87,7 @@ class SslCertificateProcessor:
                     for host in self.cache:
                         print('     {host: <{width}} - {remain}'.format(host=host, width=max_size + 2,
                                                                         remain=self.cache[host] - now))
-                    sleep_time = (32 if remaining_days > 30 else remaining_days) - 2
+                    sleep_time = min(30, remaining_days)
                     print(
                         "[SSL Refresh Thread] All the certificates are up to date sleeping for " + str(
                             sleep_time) + " days.")
@@ -101,3 +101,9 @@ class SslCertificateProcessor:
                     for host in x:
                         del self.cache[host]
                     self.server.reload()
+
+    def shutdown(self):
+        self.lock.acquire()
+        self.shutdown_requested = True
+        self.lock.notify()
+        self.lock.release()
