@@ -8,9 +8,12 @@ from nginx_proxy.utils import split_url
 def process_virtual_hosts(container: DockerContainer, known_networks: set) -> ProxyConfigData:
     hosts = ProxyConfigData()
     try:
-        for host, location, proxied_container in host_generator(container, known_networks=known_networks):
+        for host, location, proxied_container, extras in host_generator(container, known_networks=known_networks):
+            http = 'http' in host.scheme or 'https' in host.scheme
             if type(host) is not str:
-                host.add_container(location, proxied_container)
+                host.add_container(location, proxied_container, http=http)
+                if len(extras):
+                    host.locations[location].update_extras({'injected': extras})
                 hosts.add_host(host)
     except NoHostConfiguration:
         print("No VIRTUAL_HOST       ", "Id:" + container.id[:12],
@@ -40,7 +43,7 @@ def host_generator(container: DockerContainer, known_networks: set = {}):
                 raise UnreachableNetwork()
 
     for host_config in virtual_hosts:
-        host, location, container_data = _parse_host_entry(host_config)
+        host, location, container_data, extras = _parse_host_entry(host_config)
         container_data.id = container.id
         container_data.address = ip_address
         # if port is none, fetch from network settings else set default 80
@@ -51,10 +54,19 @@ def host_generator(container: DockerContainer, known_networks: set = {}):
                 container_data.port = 80
 
         host.secured = 'https' in host.scheme or host.port == 443
-        yield host, location, container_data
+        yield host, location, container_data, extras
 
 
 def _parse_host_entry(entry_string: str) -> (Host, str):
+    configs = entry_string.split(";", 1)
+    extras = set()
+    if len(configs) > 1:
+        entry_string = configs[0]
+        for x in configs[1].split(';'):
+            x = x.strip()
+            if x:
+                extras.add(x)
+
     # We need both external and internal host mapping, so we split them.
     host_list = entry_string.strip().split("->")
     external, internal = host_list if len(host_list) == 2 else (host_list[0], "")
@@ -78,4 +90,4 @@ def _parse_host_entry(entry_string: str) -> (Host, str):
 
     location = external["location"] if external["location"] else "/"
 
-    return host, location, container
+    return host, location, container, extras

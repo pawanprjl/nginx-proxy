@@ -1,4 +1,4 @@
-from typing import Set
+from typing import Set, Any, Dict
 
 from nginx_proxy.container import Container
 
@@ -8,12 +8,14 @@ class Location:
     Location Represents the Location block in server block
     """
 
-    def __init__(self, name):
+    def __init__(self, name, is_http_backend=False):
+        self.http = is_http_backend
         self.name = name
         self.containers: Set[Container] = set()
+        self.extras: Dict[str, Any] = {}
 
     def __repr__(self):
-        return str({"name": self.name, "containers": self.containers})
+        return str({"name": self.name, "containers": self.containers, "extras": self.extras})
 
     def add(self, container: Container):
         self.containers.add(container)
@@ -26,3 +28,16 @@ class Location:
 
     def is_empty(self) -> bool:
         return len(self.containers) == 0
+
+    def update_extras(self, extras: Dict[str, Any]):
+        for x in extras:
+            if x in self.extras:
+                data = self.extras[x]
+                if type(data) in (dict, set):
+                    self.extras[x].update(extras[x])
+                elif type(data) in list:
+                    self.extras[x].extend(extras[x])
+                else:
+                    self.extras[x] = extras[x]
+            else:
+                self.extras[x] = extras[x]

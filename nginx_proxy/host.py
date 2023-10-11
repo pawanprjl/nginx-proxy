@@ -23,7 +23,7 @@ class Host:
 
     def add_container(self, location: str, container: Container, http=True) -> None:
         if location not in self.locations:
-            self.locations[location] = Location(location)
+            self.locations[location] = Location(location, is_http_backend=http)
         self.locations[location].add(container)
         self.container_set.add(container.id)
 

@@ -9,7 +9,12 @@
 
         {% for location in server.locations.values() %}
             location {{ location.name }} {
-            proxy_pass http://{{ location.container.address }}:{{ location.container.port }}/;
+
+            {% for injection in location.extras.injected %}
+                {{ injection }};
+            {% endfor %}
+
+                proxy_pass http://{{ location.container.address }}:{{ location.container.port }}/;
             }
         {% endfor %}
 
@@ -23,6 +28,10 @@
 
         {% for location in server.locations.values() %}
             location {{ location.name }} {
+                {% for injection in location.extras.injected %}
+                    {{ injection }};
+                {% endfor %}
+
                 proxy_pass http://{{ location.container.address }}:{{ location.container.port }}/;
             }
         {% endfor %}

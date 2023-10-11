@@ -23,10 +23,12 @@ class ProxyConfigData:
             port_map = self.config_map[host.hostname]
             if host.port in port_map:
                 existing_host: Host = port_map[host.port]
+                existing_host.secured = host.secured or existing_host.secured
                 for location in host.locations.values():
                     for container in location.containers:
                         existing_host.add_container(location.name, container)
                         self.containers.add(container.id)
+                    existing_host.locations[location.name].update_extras(location.extras)
                 return
             else:
                 self._len = self._len + 1
