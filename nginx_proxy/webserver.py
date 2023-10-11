@@ -172,7 +172,6 @@ class WebServer:
         This is called when a container dies or leaves a known network.
         """
         deleted, deleted_domain = self.config_data.remove_container(container_id)
-        print("remove_container. deleted: ", deleted, " deleted_domain: ", deleted_domain)
         if deleted:
             self.reload()
 

@@ -122,7 +122,6 @@ class SSL:
             # only fifty at a time
             sub_list = domain[i:i + 50]
             obtained = self.register_certificate(sub_list, no_self_check=no_self_check, ignore_existing=ignore_existing)
-            print("obtained: ", obtained)
             if len(obtained):
                 domain1 = obtained[0]
                 for x in obtained[1:]:
