@@ -87,7 +87,7 @@ class WebServer:
             print("[ERROR]Couldn't determine container ID of this container:", err.args,
                   "\n Is it running in docker environment?", file=sys.stderr)
             print("Falling back to default network", file=sys.stderr)
-            network = self.client.networks.get("bridge")
+            network = self.client.networks.get("frontend")
             self.networks[network.id] = network.id
 
     def _register_container(self, container: DockerContainer) -> bool:
