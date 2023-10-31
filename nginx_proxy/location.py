@@ -8,14 +8,25 @@ class Location:
     Location Represents the Location block in server block
     """
 
-    def __init__(self, name, is_http_backend=False):
+    def __init__(self, name, is_websocket_backend=False, is_http_backend=False):
         self.http = is_http_backend
+        self.websocket = is_websocket_backend
         self.name = name
         self.containers: Set[Container] = set()
         self.extras: Dict[str, Any] = {}
 
     def __repr__(self):
-        return str({"name": self.name, "containers": self.containers, "extras": self.extras})
+        return str({
+            "name": self.name,
+            "containers": self.containers,
+            "websocket": self.websocket,
+            "extras": self.extras
+        })
+
+    def __eq__(self, other) -> bool:
+        if type(other) is Location:
+            return other.name == self.name
+        return False
 
     def add(self, container: Container):
         self.containers.add(container)

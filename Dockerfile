@@ -25,6 +25,7 @@ RUN ln -s /app/docker-entrypoint.sh /docker-entrypoint.sh
 
 ARG LETSENCRYPT_API="https://acme-v02.api.letsencrypt.org/directory"
 
-ENV LETSENCRYPT_API=${LETSENCRYPT_API}
+ENV LETSENCRYPT_API=${LETSENCRYPT_API} \
+    CLIENT_MAX_BODY_SIZE=1m
 
 CMD ["sh", "-e", "/docker-entrypoint.sh"]

@@ -21,6 +21,7 @@ def loadconfig():
         'config_dir': strip_end(os.getenv('NGINX_CONFIG_DIR', '/etc/nginx/')),
         'ssl_dir': strip_end(os.getenv('SSL_DIR', '/etc/ssl/')),
         'challenge_dir': os.getenv('CHALLENGE_DIR', '/tmp/acme-challenges/'),
+        'client_max_body_size': os.getenv('CLIENT_MAX_BODY_SIZE', '1m'),
     }
 
 
