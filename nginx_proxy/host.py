@@ -21,9 +21,12 @@ class Host:
         self.container_set: Set[str] = set()
         self.secured: bool = 'https' in scheme or 'wss' in scheme
 
-    def add_container(self, location: str, container: Container, http=True) -> None:
+    def add_container(self, location: str, container: Container, websocket=False, http=True) -> None:
         if location not in self.locations:
-            self.locations[location] = Location(location, is_http_backend=http)
+            self.locations[location] = Location(location, is_websocket_backend=websocket, is_http_backend=http)
+        elif websocket:
+            self.locations[location].websocket = websocket
+            self.locations[location].http = self.locations[location].http or http
         self.locations[location].add(container)
         self.container_set.add(container.id)
 

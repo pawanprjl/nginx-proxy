@@ -26,7 +26,7 @@ class ProxyConfigData:
                 existing_host.secured = host.secured or existing_host.secured
                 for location in host.locations.values():
                     for container in location.containers:
-                        existing_host.add_container(location.name, container)
+                        existing_host.add_container(location.name, container, location.websocket, location.http)
                         self.containers.add(container.id)
                     existing_host.locations[location.name].update_extras(location.extras)
                 return
@@ -67,14 +67,16 @@ class ProxyConfigData:
         for host in self.host_list():
             postfix = "://" + host.hostname
 
-            def host_url():
+            def host_url(is_websocket=False):
                 if host.secured:
-                    return "-   " + "https" + postfix + (":" + str(host.port) if host.port != 443 else "")
+                    return "-   " + ("wss" if is_websocket else "https") + postfix + (
+                        ":" + str(host.port) if host.port != 443 else "")
                 else:
-                    return "-   " + "http" + postfix + (":" + str(host.port) if host.port != 80 else "")
+                    return "-   " + ("ws" if is_websocket else "http") + postfix + (
+                        ":" + str(host.port) if host.port != 80 else "")
 
             for location in host.locations.values():
-                print(host_url() + location.name)
+                print(host_url(location.websocket) + location.name)
                 for container in location.containers:
                     print("         -> ", (container.scheme + "://" + container.address + ":" + str(
                         container.port) if container.port else '') + container.path)

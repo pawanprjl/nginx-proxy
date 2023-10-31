@@ -9,12 +9,16 @@ def process_virtual_hosts(container: DockerContainer, known_networks: set) -> Pr
     hosts = ProxyConfigData()
     try:
         for host, location, proxied_container, extras in host_generator(container, known_networks=known_networks):
+            websocket = "ws" in host.scheme or "wss" in host.scheme
             http = 'http' in host.scheme or 'https' in host.scheme
             if type(host) is not str:
-                host.add_container(location, proxied_container, http=http)
+                host.add_container(location, proxied_container, websocket=websocket, http=http)
                 if len(extras):
                     host.locations[location].update_extras({'injected': extras})
                 hosts.add_host(host)
+        print("Valid configuration   ", "Id:" + container.id[:12],
+              "    " + container.attrs["Name"].replace("/", ""), sep="\t")
+        return hosts
     except NoHostConfiguration:
         print("No VIRTUAL_HOST       ", "Id:" + container.id[:12],
               "    " + container.attrs["Name"].replace("/", ""), sep="\t")
@@ -53,7 +57,7 @@ def host_generator(container: DockerContainer, known_networks: set = {}):
             else:
                 container_data.port = 80
 
-        host.secured = 'https' in host.scheme or host.port == 443
+        host.secured = 'https' in host.scheme or 'wss' in host.scheme or host.port == 443
         yield host, location, container_data, extras
 
 
