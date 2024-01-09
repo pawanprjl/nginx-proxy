@@ -15,7 +15,7 @@ docker network create frontend;    # create a network for nginx proxy
 docker run  --network frontend \
             --name nginx-proxy \
             -v /var/run/docker.sock:/var/run/docker.sock:ro \
-            -v /etc/ssl:/etc/ssl \
+            -v /etc/nginx/conf.d:/etc/nginx/conf.d \
             -v /etc/nginx/dhparam:/etc/nginx/dhparam \
             -p 80:80 \
             -p 443:443 \
