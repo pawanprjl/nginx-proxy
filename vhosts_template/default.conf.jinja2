@@ -38,7 +38,7 @@ client_max_body_size {{ config.client_max_body_size }};
     server {
         listen {{ server.port }} ssl;
         http2 on;
-        server_name {{ server.hostname }};
+        server_name {{ server.hostname }} www.{{ server.hostname }};
         ssl_certificate /etc/ssl/certs/{{ server.ssl_file }}.crt;
         ssl_certificate_key /etc/ssl/private/{{ server.ssl_file }}.key;
 
