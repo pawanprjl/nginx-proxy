@@ -38,11 +38,11 @@ def host_generator(container: DockerContainer, known_networks: set = {}):
 
     # instead of directly accessing container details, check if they are accessible through networks
     for name, detail in network_settings["Networks"].items():
-        if detail["Aliases"] is not None:
-            if detail["NetworkID"] in known_networks:
-                ip_address = detail["IPAddress"]
-                if ip_address:
-                    break
+        # if detail["Aliases"] is not None:
+        if detail["NetworkID"] in known_networks:
+            ip_address = detail["IPAddress"]
+            if ip_address:
+                break
     else:
         raise UnreachableNetwork()
 
