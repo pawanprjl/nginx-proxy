@@ -4,7 +4,7 @@ FROM pawanprjl/python-nginx
 ENV PIP_ROOT_USER_ACTION ignore
 ENV PIP_DISABLE_PIP_VERSION_CHECK 1
 
-HEALTHCHECK --interval=10s --timeout=2s --start-period=10s --retries=3 CMD pgrep nginx && pgrep python3 >> /dev/null || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=5 CMD pgrep nginx && pgrep python3 >> /dev/null || exit 1
 
 VOLUME  ["/etc/nginx/dhparam", "/tmp/acme-challenges/","/etc/nginx/conf.d"]
 
